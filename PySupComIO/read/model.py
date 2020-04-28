@@ -29,7 +29,7 @@ class ScmHeader:
     total_bone_count: int
 
 
-def read_bones(header: ScmHeader, file_reader: io.BufferedReader):
+def _read_bones(header: ScmHeader, file_reader: io.BufferedReader):
     bones: List[Bone] = []
 
     file_reader.seek(header.bone_data_offset, io.SEEK_SET)
@@ -67,7 +67,7 @@ def read_bones(header: ScmHeader, file_reader: io.BufferedReader):
     return bones
 
 
-def read_vertices(header: ScmHeader, bones: List[Bone], file_reader: io.BufferedReader):
+def _read_vertices(header: ScmHeader, bones: List[Bone], file_reader: io.BufferedReader):
     file_reader.seek(header.vertices_offset)
     vertices = []
     vertex_format = '3f3f3f3f2f2f4B'
@@ -99,7 +99,7 @@ def read_vertices(header: ScmHeader, bones: List[Bone], file_reader: io.Buffered
     return vertices
 
 
-def read_triangles(header: ScmHeader, vertices: List[Vertex], file_reader: io.BufferedReader) -> List[Triangle]:
+def _read_triangles(header: ScmHeader, vertices: List[Vertex], file_reader: io.BufferedReader) -> List[Triangle]:
     assert (ScmHeader.num_triangle_indexes % 3 == 0, "There are more vertex indexes than there should be "
                                                      "if the mesh would only contain triangles")
 
@@ -124,13 +124,13 @@ def read_triangles(header: ScmHeader, vertices: List[Vertex], file_reader: io.Bu
     return triangles
 
 
-def read_info(header: ScmHeader, file_reader: io.BufferedReader) -> str:
+def _read_info(header: ScmHeader, file_reader: io.BufferedReader) -> str:
     file_reader.seek(header.info_string_offset)
 
     return file_reader.read(header.info_string_length).decode('ascii')
 
 
-def read_header(file_reader: io.BufferedReader) -> ScmHeader:
+def _read_header(file_reader: io.BufferedReader) -> ScmHeader:
     # read unpacked_header
     unpacked_header = struct.unpack_from('4s11I', file_reader, 0)
 
@@ -157,6 +157,13 @@ def read_header(file_reader: io.BufferedReader) -> ScmHeader:
 
 
 def read_model(filepath: Path) -> Model:
+    """
+    Reads the SCM Model specified by filepath
+    :param filepath: path to the SCM file
+    :return: model data that is in the file
+    """
+    if filepath.is_dir():
+        raise IsADirectoryError
     if not filepath.exists():
         raise FileNotFoundError(filepath)
 
@@ -166,10 +173,10 @@ def read_model(filepath: Path) -> Model:
 
         logger.info(f"Reading SCM Model from {filepath}")
 
-        header = read_header(file_reader)
+        header = _read_header(file_reader)
 
-        model.bones = read_bones(header, file_reader)
-        model.vertices = read_vertices(header, model.bones, file_reader)
-        model.faces = read_triangles(header, model.vertices, file_reader)
-        model.info = read_info(header, file_reader)
+        model.bones = _read_bones(header, file_reader)
+        model.vertices = _read_vertices(header, model.bones, file_reader)
+        model.faces = _read_triangles(header, model.vertices, file_reader)
+        model.info = _read_info(header, file_reader)
         return model

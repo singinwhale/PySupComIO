@@ -26,7 +26,7 @@ class ScaHeader:
     frame_size: int  # size of a stored frame in bytes
 
 
-def read_header(file_reader: io.BufferedReader) -> ScaHeader:
+def _read_header(file_reader: io.BufferedReader) -> ScaHeader:
     # read unpacked_header
     unpacked_header = struct.unpack_from('4s2If5I', file_reader, 0)
 
@@ -50,7 +50,7 @@ def read_header(file_reader: io.BufferedReader) -> ScaHeader:
     return header
 
 
-def read_bone_links(header: ScaHeader, file_reader: io.BufferedReader) -> List[BoneLink]:
+def _read_bone_links(header: ScaHeader, file_reader: io.BufferedReader) -> List[BoneLink]:
     bone_links: List[BoneLink] = []
     file_reader.seek(header.bone_names_offset, io.SEEK_SET)
     for i in range(0, header.bones_num):
@@ -77,7 +77,7 @@ def read_bone_links(header: ScaHeader, file_reader: io.BufferedReader) -> List[B
     return bone_links
 
 
-def read_pose(pose_offset: int, header: ScaHeader, animation: Animation, file_reader: io.BufferedReader) -> Pose:
+def _read_pose(pose_offset: int, header: ScaHeader, animation: Animation, file_reader: io.BufferedReader) -> Pose:
     pose_format = "3f4f" * len(animation.bone_links)
     assert (header.frame_size == struct.calcsize(pose_format) - 8, "Pose is not the expected size")
     pose = Pose()
@@ -95,7 +95,7 @@ def read_pose(pose_offset: int, header: ScaHeader, animation: Animation, file_re
     return pose
 
 
-def read_frames(header: ScaHeader, animation: Animation, file_reader: io.BufferedReader) -> List[Frame]:
+def _read_frames(header: ScaHeader, animation: Animation, file_reader: io.BufferedReader) -> List[Frame]:
     frame_header_format = 'fi'
     frame_header_size = struct.calcsize(frame_header_format)
     pose_size = header.frame_size - frame_header_size
@@ -115,6 +115,14 @@ def read_frames(header: ScaHeader, animation: Animation, file_reader: io.Buffere
 
 
 def read_animation(filepath: Path) -> Animation:
+    """
+    Reads the SCA Animation at the given filepath
+    :param filepath: path to a SCA Animation file
+    :return: returns the animation that is in the given file
+    """
+    if filepath.is_dir():
+        raise IsADirectoryError
+
     if not filepath.exists():
         raise FileNotFoundError(filepath)
 
@@ -124,10 +132,10 @@ def read_animation(filepath: Path) -> Animation:
 
         logger.info(f"Reading SCA Model from {filepath}")
 
-        header = read_header(file_reader)
+        header = _read_header(file_reader)
 
         animation.duration = header.duration
-        animation.bone_links = read_bone_links(header, file_reader)
-        animation.initial_pose = read_pose(header.anim_offset, header, animation, file_reader)
-        animation.frames = read_frames(header, animation, file_reader)
+        animation.bone_links = _read_bone_links(header, file_reader)
+        animation.initial_pose = _read_pose(header.anim_offset, header, animation, file_reader)
+        animation.frames = _read_frames(header, animation, file_reader)
         return animation
