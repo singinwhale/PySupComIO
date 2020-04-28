@@ -108,7 +108,7 @@ def _read_frames(header: ScaHeader, animation: Animation, file_reader: io.Buffer
         frame = Frame()
         frame.time = frame_header_data[0]
         frame.flags = frame_header_data[1]
-        frame.pose = read_pose(frame_offset+frame_header_size, header, animation, file_reader)
+        frame.pose = _read_pose(frame_offset+frame_header_size, header, animation, file_reader)
         frames += frame
 
     return frames
