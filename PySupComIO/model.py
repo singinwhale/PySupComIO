@@ -28,7 +28,7 @@ class Triangle:
         Flat shaded faces have split vertices/ normals
     """
     vertex_indexes: List[int]  # exactly three vertex indexes of the vertices that make up this face
-    vertices: List[Vertex]
+    vertices: List[Vertex]  # pointers to the vertices referred to by the vertex_indexes. not required for export
 
 
 class Model:

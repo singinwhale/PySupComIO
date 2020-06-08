@@ -26,7 +26,6 @@ class ScmHeader:
     num_triangle_indexes: int
     info_string_offset: int
     info_string_length: int
-    total_bone_count: int
 
 
 def _read_bones(header: ScmHeader, file_reader: io.BufferedReader):
@@ -162,11 +161,6 @@ def read_model(filepath: Path) -> Model:
     :param filepath: path to the SCM file
     :return: model data that is in the file
     """
-    if filepath.is_dir():
-        raise IsADirectoryError
-    if not filepath.exists():
-        raise FileNotFoundError(filepath)
-
     file_reader: io.BufferedReader
     with filepath.open('rb') as file_reader:
         model = Model()

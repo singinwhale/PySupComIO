@@ -120,12 +120,6 @@ def read_animation(filepath: Path) -> Animation:
     :param filepath: path to a SCA Animation file
     :return: returns the animation that is in the given file
     """
-    if filepath.is_dir():
-        raise IsADirectoryError
-
-    if not filepath.exists():
-        raise FileNotFoundError(filepath)
-
     file_reader: io.BufferedReader
     with filepath.open('rb') as file_reader:
         animation = Animation()
